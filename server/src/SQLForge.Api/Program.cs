@@ -1,6 +1,13 @@
+using Npgsql;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Configura a conexão com o banco de dados PostgreSQL
+var connectionString = builder.Configuration.GetConnectionString("SqlForge");
+if (string.IsNullOrWhiteSpace(connectionString)) throw new InvalidOperationException("Configure a ConnectionString");
+
+// Injeção de dependência do NpgsqlDataSource para gerenciar conexões com o banco de dados
+builder.Services.AddSingleton<NpgsqlDataSource>(_ => NpgsqlDataSource.Create(connectionString));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
