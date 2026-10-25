@@ -6,14 +6,33 @@ using SQLForge.Api.Services;
 using SQLForge.Api.Repositories;
 using Microsoft.AspNetCore.Diagnostics;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    WebRootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot")
+});
+
+// Render fornece PORT; localmente os launch profiles continuam funcionando.
+if (builder.Configuration["PORT"] is { Length: > 0 } port)
+{
+    if (!int.TryParse(port, out var number) || number is < 1 or > 65535)
+        throw new InvalidOperationException("PORT deve ser uma porta TCP válida.");
+    builder.WebHost.UseUrls($"http://0.0.0.0:{number}");
+}
 
 // Pega e valida a connection string das configurações
 var connectionString = builder.Configuration.GetConnectionString("SqlForge");
 if (string.IsNullOrWhiteSpace(connectionString)) throw new InvalidOperationException("Configure a ConnectionString");
 
 // Injeção de dependência do NpgsqlDataSource para gerenciar conexões com o banco de dados
-builder.Services.AddSingleton<NpgsqlDataSource>(_ => NpgsqlDataSource.Create(connectionString));
+builder.Services.AddSingleton<NpgsqlDataSource>(_ =>
+{
+    try { return NpgsqlDataSource.Create(connectionString); }
+    catch (ArgumentException)
+    {
+        throw new InvalidOperationException("ConnectionStrings__SqlForge inválida. Use o formato Npgsql.");
+    }
+});
 
 // Injeção de dependência do DatabaseInitializer para inicializar o banco de dados
 builder.Services.AddSingleton<DatabaseInitializer>();
@@ -74,18 +93,24 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors();
 
-app.UseHttpsRedirection();
+// Em produção o Render termina TLS; o container recebe HTTP.
+if (app.Environment.IsDevelopment()) app.UseHttpsRedirection();
+
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 try
 {
     await app.Services.GetRequiredService<DatabaseInitializer>().InitializeAsync();
     app.Logger.LogInformation("Seed executada com sucesso.");
 }
-catch (NpgsqlException)
+catch (Exception exception) when (exception is NpgsqlException or TimeoutException)
 {
     throw new InvalidOperationException("Não foi possível inicializar o banco. Confira se o PostgreSQL está ativo, se o banco existe e se a conexão foi configurada. Consulte a documentação.");
 }

@@ -6,3 +6,7 @@
 .DS_Store
 *.user
 .vscode
+artifacts/
+.env
+.env.*
+**/appsettings.Local.json
