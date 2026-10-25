@@ -35,6 +35,11 @@ builder.Services.AddSwaggerGen();
 // Configuração do ProblemDetails para tratamento de erros
 builder.Services.AddProblemDetails();
 
+// Configuração do CORS frontend
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
+    .WithOrigins(builder.Configuration.GetSection("ClientOrigins").Get<string[]>() ?? ["http://localhost:5500"])
+    .AllowAnyHeader().AllowAnyMethod()));
+
 var app = builder.Build();
 
 // Ativo também em desenvolvimento para nunca retornar páginas de exceção aos clientes.
@@ -66,6 +71,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors();
 
 app.UseHttpsRedirection();
 

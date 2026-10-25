@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQLForge</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+    <script type="module" src="../js/app/index.js"></script>
+</head>
+<body>
+    <section>
+        <h2>Consultar metadados</h2>
+        <button type="button" id="metadata">Carregar metadados</button>
+    </section>
+
+    <script type="module">
+        import { getMetadata } from "../js/app/index.js";
+
+        document.getElementById("metadata").addEventListener("click", async () => console.log(await getMetadata()));
+    </script>
+</body>
+</html>
