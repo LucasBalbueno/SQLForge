@@ -1,4 +1,5 @@
 using Npgsql;
+using SQLForge.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +9,9 @@ if (string.IsNullOrWhiteSpace(connectionString)) throw new InvalidOperationExcep
 
 // Injeção de dependência do NpgsqlDataSource para gerenciar conexões com o banco de dados
 builder.Services.AddSingleton<NpgsqlDataSource>(_ => NpgsqlDataSource.Create(connectionString));
+
+// Injeção de dependência do DatabaseInitializer para inicializar o banco de dados
+builder.Services.AddSingleton<DatabaseInitializer>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -27,5 +31,15 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+try
+{
+    await app.Services.GetRequiredService<DatabaseInitializer>().InitializeAsync();
+    app.Logger.LogInformation("Seed executada com sucesso.");
+}
+catch (NpgsqlException)
+{
+    throw new InvalidOperationException("Não foi possível inicializar o banco. Confira se o PostgreSQL está ativo, se o banco existe e se a conexão foi configurada. Consulte a documentação.");
+}
 
 app.Run();
