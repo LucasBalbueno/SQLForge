@@ -1,12 +1,14 @@
 using Npgsql;
 using SQLForge.Api.Data;
 using SQLForge.Api.Errors;
-using SQLForge.Api.Repositories;
+using SQLForge.Api.Models;
 using SQLForge.Api.Services;
+using SQLForge.Api.Repositories;
+using Microsoft.AspNetCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configura a conexão com o banco de dados PostgreSQL
+// Pega e valida a connection string das configurações
 var connectionString = builder.Configuration.GetConnectionString("SqlForge");
 if (string.IsNullOrWhiteSpace(connectionString)) throw new InvalidOperationException("Configure a ConnectionString");
 
@@ -26,13 +28,37 @@ builder.Services.AddScoped<IProductQueryRepository, ProductQueryRepository>();
 // Injeção de dependência dos controllers
 builder.Services.AddControllers().AddSafeApiErrors();
 
+// Configuração do Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Configuração do ProblemDetails para tratamento de erros
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
 // Ativo também em desenvolvimento para nunca retornar páginas de exceção aos clientes.
 app.UseExceptionHandler();
+
+// Middleware para capturar exceções não tratadas durante o processamento das requisições
+app.UseExceptionHandler(handler => handler.Run(async context =>
+{
+    // Obtem a exceção capturada pelo middleware
+    var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+    // Identificação de erro de validação
+    var validation = exception as QueryValidationException;
+    // identificação de falha de conexão com o banco de dados
+    var databaseFailure = exception is NpgsqlException or TimeoutException;
+    // Escolhe o status code apropriado com base no tipo de exceção
+    var status = validation is not null ? 400 : databaseFailure ? 503 : 500;
+
+    // Criação da resposta ProblemDetails
+    await Results.Problem(statusCode: status,
+        title: validation is not null ? "Consulta inválida" : databaseFailure ? "Banco indisponível" : "Erro inesperado",
+        detail: validation?.Message ?? (databaseFailure
+            ? "Não foi possível consultar o banco. Verifique a conexão e tente novamente."
+            : "Não foi possível concluir a operação.")).ExecuteAsync(context);
+}));
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
