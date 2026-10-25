@@ -1,5 +1,8 @@
 using Npgsql;
 using SQLForge.Api.Data;
+using SQLForge.Api.Errors;
+using SQLForge.Api.Repositories;
+using SQLForge.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,11 +16,23 @@ builder.Services.AddSingleton<NpgsqlDataSource>(_ => NpgsqlDataSource.Create(con
 // Injeção de dependência do DatabaseInitializer para inicializar o banco de dados
 builder.Services.AddSingleton<DatabaseInitializer>();
 
-builder.Services.AddControllers();
+// Injeção de dependência dos Services
+builder.Services.AddScoped<QueryBuilder>();
+builder.Services.AddScoped<QueryService>();
+
+// Injeção de dependência do repository
+builder.Services.AddScoped<IProductQueryRepository, ProductQueryRepository>();
+
+// Injeção de dependência dos controllers
+builder.Services.AddControllers().AddSafeApiErrors();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+// Ativo também em desenvolvimento para nunca retornar páginas de exceção aos clientes.
+app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
