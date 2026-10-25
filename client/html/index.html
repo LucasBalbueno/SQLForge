@@ -1,22 +1,120 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SQLForge</title>
-    <link rel="stylesheet" href="../css/styles.css" />
-    <script type="module" src="../js/app/index.js"></script>
-</head>
-<body>
-    <section>
-        <h2>Consultar metadados</h2>
-        <button type="button" id="metadata">Carregar metadados</button>
-    </section>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>SQLForge</title>
+        <link rel="stylesheet" href="../css/styles.css" />
+        <script type="module" src="../js/app/index.js"></script>
+    </head>
+    <body>
+        <main>
+            <!-- HEADER -->
+            <header class="hero">
+                <div class="logo_brand">
+                    <h1 class="brand">SQLForge</h1>
+                    <p class="eyebrow">GERADOR DE CONSULTAS SQL</p>
+                </div>
 
-    <script type="module">
-        import { getMetadata } from "../js/app/index.js";
+                <h1 class="hero-title">Sua consulta, do seu jeito.</h1>
 
-        document.getElementById("metadata").addEventListener("click", async () => console.log(await getMetadata()));
-    </script>
-</body>
+                <p>Escolha os dados do estoque e personalize sua busca. O SQL acompanha suas escolhas.</p>
+            </header>
+
+            <fieldset id="workspace" disabled>
+                <!-- SEÇÃO 01 - COLUNAS -->
+                <section class="card">
+                    <div class="section-heading">
+                        <h2><span>01</span> Colunas</h2>
+                        <button id="select-all" class="text-button" type="button">Selecionar todas</button>
+                    </div>
+
+                    <p>Quais informações você quer ver?</p>
+
+                    <div id="columns" class="column-options"></div>
+                </section>
+
+                <!-- 02 Filtros -->
+                <section class="card">
+                    <div class="section-heading">
+                        <h2><span>02</span> Filtros</h2>
+                        <button id="add-filter" class="text-button" type="button">+ Adicionar filtro</button>
+                    </div>
+
+                    <p>Todas as condições são combinadas por <strong>E (AND)</strong>. A busca por texto diferencia maiúsculas e minúsculas.</p>
+
+                    <div id="filters" class="rows"></div>
+
+                    <p id="no-filters" class="empty-hint">Adicione filtros para refinar a busca</p>
+                </section>
+
+                <!-- 03 Ordenação -->
+                <section class="card">
+                    <div class="section-heading">
+                        <h2><span>03</span> Ordenação</h2>
+                        <button id="add-order" class="text-button" type="button">+ Adicionar ordem</button>
+                    </div>
+
+                    <p>Ordem aplicada de cima para baixo. O padrão é ordenar pelo ID.</p>
+
+                    <div id="orders" class="rows"></div>
+
+                    <p id="no-orders" class="empty-hint">Adicione ordenações para organizar a busca</p>
+                </section>
+
+                <!-- 04 Consulta SQL -->
+                <section class="card sql-panel">
+                    <div class="section-heading">
+                        <h2><span>04</span> Consulta SQL</h2>
+                    </div>
+
+                    <div class="query-toolbar">
+                        <p>A consulta é atualizada automaticamente quando todos os campos estão preenchidos.</p>
+                    </div>
+
+                    <p id="status" role="status" aria-live="polite"></p>
+
+                    <pre id="sql" tabindex="0" aria-label="SQL gerado">Sua consulta aparecerá aqui.</pre>
+
+                    <div class="actions">
+                        <div class="page-size-control">
+                            <label for="page-size">Itens por página</label>
+                            <select id="page-size">
+                            <option value="5">5 itens</option>
+                            <option value="10" selected>10 itens</option>
+                            <option value="20">20 itens</option>
+                            <option value="30">30 itens</option>
+                            </select>
+                        </div>
+
+                        <button id="copy" type="button" disabled>Copiar SQL</button>
+
+                        <button id="execute" type="button" class="primary" disabled>Executar consulta</button>
+                    </div>
+                </section>
+
+                <!-- 05 Resultados -->
+                <section class="card results">
+                    <div class="section-heading">
+                        <h2><span>05</span> Resultados</h2>
+                        <span id="result-summary">Nenhuma consulta executada</span>
+                    </div>
+
+                    <div id="table-container" class="table-container">
+                        <p class="empty-hint">Execute a consulta para visualizar os produtos</p>
+                    </div>
+
+                    <!-- Navegação entre páginas -->
+                    <nav class="pagination" aria-label="Paginação">
+                        <span id="page-info">Página —</span>
+                        <button id="previous" type="button" disabled>← Anterior</button>
+                        <button id="next" type="button" disabled>Próxima →</button>
+                    </nav>
+                </section>
+            </fieldset>
+
+            <!-- FOOTER -->
+            <footer>Desenvolvido por Lucas Balbueno Vicêncio · 2026</footer>
+        </main>
+    </body>
 </html>
