@@ -1,6 +1,0 @@
-@SQLForge.Api_HostAddress = http://localhost:5247
-
-GET {{SQLForge.Api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

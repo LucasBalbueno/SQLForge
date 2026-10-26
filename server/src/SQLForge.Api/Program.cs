@@ -61,9 +61,6 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
 
 var app = builder.Build();
 
-// Ativo também em desenvolvimento para nunca retornar páginas de exceção aos clientes.
-app.UseExceptionHandler();
-
 // Middleware para capturar exceções não tratadas durante o processamento das requisições
 app.UseExceptionHandler(handler => handler.Run(async context =>
 {
