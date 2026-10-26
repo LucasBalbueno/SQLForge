@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Instalar SDK .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Verificar Docker
+        run: docker info
+
+      - name: Restaurar dependências
+        run: dotnet restore SQLForge.sln
+
+      - name: Compilar
+        run: dotnet build SQLForge.sln --configuration Release --no-restore
+
+      - name: Executar testes unitários e de integração
+        run: dotnet test SQLForge.sln --configuration Release --no-build --no-restore
+
+      - name: Validar publicação
+        run: |
+          dotnet publish server/src/SQLForge.Api/SQLForge.Api.csproj \
+            --configuration Release --no-build --no-restore \
+            --output ./artifacts/publish
