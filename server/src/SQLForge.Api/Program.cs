@@ -116,3 +116,6 @@ catch (Exception exception) when (exception is NpgsqlException or TimeoutExcepti
 }
 
 app.Run();
+
+// Permite iniciar a aplicação real nos testes de integração
+public partial class Program { }
